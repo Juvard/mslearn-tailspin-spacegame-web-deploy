@@ -65,27 +65,28 @@ stages:
     - publish: '$(Build.ArtifactStagingDirectory)'
       artifact: drop
 
--- stage: 'Deploy'
+- stage: 'Deploy'
   displayName: 'Deploy the web application'
   dependsOn: Build
   jobs:
-    - deployment: Deploy
-      pool:
-        vmImage: 'ubuntu-latest'
-      environment: dev
-      variables:
-        - group: Release
-        - name: WebAppName
-          value: 'tailspin-space-game-web-12345'  
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-              - download: current
-                artifact: drop
-              - task: AzureWebApp@1
-                displayName: 'Azure App Service Deploy: website'
-                inputs:
-                  azureSubscription: 'Resource Manager - Tailspin - Space Game'
-                  appName: '$(WebAppName)'
-                  package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
+  - deployment: Deploy
+    displayName: 'Deploy to Azure Web App'
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: dev
+    variables:
+      - group: Release
+      - name: WebAppName
+        value: 'tailspin-space-game-web-12345'  # <-- Replace this with your actual Azure Web App name
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+          - task: AzureWebApp@1
+            displayName: 'Azure App Service Deploy: website'
+            inputs:
+              azureSubscription: 'Resource Manager - Tailspin - Space Game'  # <-- Ensure this matches your Azure DevOps service connection name
+              appName: '$(WebAppName)'
+              package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
